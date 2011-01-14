@@ -1,0 +1,58 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Installation hooks for the uc_in_person module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function uc_in_person_install() {
+  drupal_install_schema('uc_in_person');
+}
+
+/**
+ * Implemenatation of hook_uninstall().
+ */
+function uc_in_person_uninstall() {
+  drupal_uninstall_schema('uc_in_person');
+  db_query("DELETE FROM {variable} WHERE name ='uc_in_person_method_name'");
+  db_query("DELETE FROM {variable} WHERE name ='uc_in_person_payment_policy'");
+}
+
+/**
+ * Implemenation of hook_schema().
+ */
+function uc_in_person_schema() {
+  $schema = array();
+    $schema['uc_payment_in_person'] = array(
+    'description' => 'Stores in_person payment information.',
+    'fields' => array(
+      'payment_id' => array(
+        'description' => 'Primary key: the payment ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'order_id' => array(
+        'description' => 'The {uc_orders}.order_id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'payment_date' => array(
+        'description' => 'The Unix timestamp indicating the payment date.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'order_id' => array('order_id'),
+    ),
+    'primary key' => array('payment_id'),
+  );
+  return $schema;
+}

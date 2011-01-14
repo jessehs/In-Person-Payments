@@ -1,0 +1,7 @@
+name = In Person Payment
+description = Provides the 'In-Person' payment method.
+dependencies[] = uc_cart
+dependencies[] = uc_payment
+package = "Ubercart - payment"
+core = 6.x
+php = 5.0

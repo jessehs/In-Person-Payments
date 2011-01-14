@@ -1,0 +1,114 @@
+<?php
+// $Id$
+/**
+ * @file
+ * In person payment module.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function uc_in_person_menu() {
+  $items = array();
+
+  $items['admin/store/orders/%uc_order/process_payment'] = array(
+    'title' => 'Process In Person Payment',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_in_person_process_payment_form', 3),
+    'access arguments' => array('view all orders'),
+    'type' => MENU_CALLBACK,
+    'file' => 'uc_in_person.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function uc_in_person_theme() {
+  return array(
+    'uc_in_person_process_payment_form' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'uc_payment_pack.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_payment_method().
+ */
+function uc_in_person_payment_method() {
+  $methods[] = array(
+    'id' => 'in_person',
+    'name' => variable_get('uc_in_person_method_review_name' , t('In Person Payment')),
+    'title' => variable_get('uc_in_person_method_checkout_name' , t('Cash or Money Order: Make a payment at your local merchant or organization.')),
+    'desc' => t('Make a cash payment at your organization.'),
+    'callback' => 'uc_payment_method_in_person',
+    'weight' => 0,
+    'no_gateway' => TRUE,
+  );
+  return $methods;
+}
+
+/**
+ * Handle the In Person payment method.
+ */
+function uc_payment_method_in_person($op, &$arg1) {
+  switch ($op) {
+    case 'cart-details':
+      $details = variable_get('uc_in_person_payment_policy', '');
+      return $details;
+    case 'cart-review':
+      $review = array();
+      if (variable_get('uc_in_person_payment_policy', '')) {
+        $review[] = array(
+          'title' => t('Payment Policy'),
+          'data' => variable_get('uc_in_person_payment_policy', '')
+        );
+      }
+      return $review;
+    case 'order-review':
+      $review = 'Paying local organization or merchant. (order-review op)';
+      return $review;
+    case 'order-view':
+      $result = db_query("SELECT payment_date FROM {uc_payment_in_person} WHERE "
+                        ."order_id = %d ", $arg1->order_id);
+      if ($cash_payment = db_fetch_object($result)) {
+        $output = t('Payment Date:') .' '. format_date($payment->payment_date, 'custom', variable_get('uc_date_format_default', 'm/d/Y'));
+      }
+      else {
+        $output = l(t('Process Payment'), 'admin/store/orders/'. $arg1->order_id .'/process_payment');
+      }
+      $output .= '<br />';
+      return $output;
+    case 'customer-view':
+      $result = db_query("SELECT payment_date FROM {uc_payment_in_person} WHERE order_id = %d ", $arg1->order_id);
+      if ($payment = db_fetch_object($result)) {
+        $output = t('Payment received on ') . format_date($payment->payment_date, 'custom', variable_get('uc_date_format_default', 'm/d/Y'));
+      } else {
+        $output = t('The payment has not been received, or has not yet been processed.');
+      }
+      return $output;
+    case 'settings':
+      $form['uc_in_person_method_checkout_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Payment Method Name'),
+        '#description' => t('The name of the payment method that customers will see on the checkout page.'),
+        '#default_value' => variable_get('uc_in_person_method_checkout_name' , t('Cash or Money Order: Make a payment at your local merchant or organization.')),
+      );
+      $form['uc_in_person_method_review_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Payment Method Name'),
+        '#description' => t('The name of the payment method that customers will see on the review page.'),
+        '#default_value' => variable_get('uc_in_person_method_review_name' , t('In Person Payment')),
+      );
+      $form['uc_in_person_payment_policy'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Cash payment policy'),
+        '#description' => t('Instructions for customers on the checkout page.'),
+        '#default_value' => variable_get('uc_in_person_payment_policy', ''),
+      );
+      return $form;
+  }
+}
