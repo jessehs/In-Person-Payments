@@ -17,7 +17,8 @@ function uc_in_person_install() {
  */
 function uc_in_person_uninstall() {
   drupal_uninstall_schema('uc_in_person');
-  db_query("DELETE FROM {variable} WHERE name ='uc_in_person_method_name'");
+  db_query("DELETE FROM {variable} WHERE name ='uc_in_person_method_review_name'");
+  db_query("DELETE FROM {variable} WHERE name ='uc_in_person_method_checkout_name'");
   db_query("DELETE FROM {variable} WHERE name ='uc_in_person_payment_policy'");
 }
 
