@@ -86,7 +86,8 @@ function uc_payment_method_in_person($op, &$arg1) {
       $result = db_query("SELECT payment_date FROM {uc_payment_in_person} WHERE order_id = %d ", $arg1->order_id);
       if ($payment = db_fetch_object($result)) {
         $output = t('Payment received on ') . format_date($payment->payment_date, 'custom', variable_get('uc_date_format_default', 'm/d/Y'));
-      } else {
+      }
+      else {
         $output = t('The payment has not been received, or has not yet been processed.');
       }
       return $output;
